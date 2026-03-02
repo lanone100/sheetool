@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>真空成型厚度計算器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0077cc;
+            --primary-light: #e6f3fb;
+            --accent: #00c2a8;
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #1a2233;
+            --muted: #6b7a99;
+            --border: #dde3ef;
+            --result-bg: #eafaf7;
+            --result-border: #00c2a8;
+            --shadow: 0 2px 16px rgba(0,119,204,0.08);
+            --radius: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 32px;
+        }
+
+        /* ── Header ── */
+        .app-header {
+            background: linear-gradient(135deg, #0077cc 0%, #00b8e6 60%, #00c2a8 100%);
+            color: white;
+            padding: 28px 20px 22px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .app-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 20px,
+                rgba(255,255,255,0.04) 20px,
+                rgba(255,255,255,0.04) 40px
+            );
+        }
+        .app-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            position: relative;
+        }
+        .app-header p {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 4px;
+            position: relative;
+            letter-spacing: 0.06em;
+        }
+
+        /* ── Tab Nav ── */
+        .tab-nav {
+            display: flex;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 14px 8px;
+            border: none;
+            background: transparent;
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            letter-spacing: 0.02em;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-btn .tab-icon {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        /* ── Content ── */
+        .tab-panel { display: none; padding: 16px 14px; }
+        .tab-panel.active { display: block; }
+
+        /* ── Card ── */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            overflow: hidden;   /* 防止子元素溢出圓角 */
+        }
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            border-radius: 2px;
+        }
+
+        /* ── Form ── */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;   /* 手機預設單欄 */
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        /* 桌機/平板才用兩欄 */
+        @media (min-width: 480px) {
+            .form-row.two-col { grid-template-columns: 1fr 1fr; }
+        }
+        .form-row.single { grid-template-columns: 1fr; }
+
+        .field { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .field label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+        }
+        .field input, .field select {
+            font-family: 'DM Mono', monospace;
+            font-size: 1.05rem;
+            padding: 14px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg);
+            color: var(--text);
+            width: 100%;
+            min-width: 0;           /* 防止 grid 子元素溢出 */
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .field input:focus, .field select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,119,204,0.12);
+            background: white;
+        }
+        .field select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        /* ── Material Pills ── */
+        .material-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: white;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'DM Mono', monospace;
+        }
+        .pill.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .pill:hover:not(.active) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ── Calc Button ── */
+        .calc-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), #00b8e6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(0,119,204,0.3);
+        }
+        .calc-btn:active { transform: scale(0.98); }
+        .calc-btn:hover { box-shadow: 0 6px 18px rgba(0,119,204,0.4); }
+
+        /* ── Result ── */
+        .result-box {
+            display: none;
+            margin-top: 16px;
+            background: var(--result-bg);
+            border: 1.5px solid var(--result-border);
+            border-radius: 12px;
+            padding: 16px;
+            animation: slideIn 0.25s ease;
+        }
+        .result-box.show { display: block; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .result-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .result-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 2.2rem;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1;
+        }
+        .result-value span {
+            font-size: 1rem;
+            color: var(--muted);
+            margin-left: 4px;
+        }
+        .formula-box {
+            margin-top: 14px;
+            background: white;
+            border-radius: 8px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+        }
+        .formula-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .formula-line {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            color: #444;
+            line-height: 1.7;
+        }
+        .formula-line .hl { color: var(--primary); font-weight: 500; }
+        .formula-line .hl2 { color: var(--accent); font-weight: 500; }
+
+        /* ── Reference Table ── */
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            table-layout: fixed;   /* 固定欄寬防溢出 */
+        }
+        .ref-table th {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 700;
+            padding: 10px 8px;
+            text-align: left;
+            font-size: 0.75rem;
+            letter-spacing: 0.02em;
+            word-break: keep-all;
+        }
+        .ref-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            word-break: break-all;
+            line-height: 1.5;
+        }
+        .ref-table tr:last-child td { border-bottom: none; }
+        .ref-table tr:hover td { background: var(--primary-light); }
+        .mat-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 500;
+            background: var(--primary);
+            color: white;
+        }
+        .density-val {
+            font-family: 'DM Mono', monospace;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        /* ── Steps hint ── */
+        .steps {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .step {
+            flex: 1;
+            background: var(--primary-light);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+        }
+        .step-num {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'DM Mono', monospace;
+        }
+        .step-label {
+            font-size: 0.68rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+
+        /* custom density hidden */
+        .custom-density-row { display: none; grid-template-columns: 1fr; }
+        .custom-density-row.show { display: grid; }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>真空成型厚度計算器</h1>
+    <p>VACUUM FORMING MATERIAL CALCULATOR</p>
+</div>
+
+<nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('rect', this)">
+        <span class="tab-icon">▬</span>矩形
+    </button>
+    <button class="tab-btn" onclick="switchTab('circle', this)">
+        <span class="tab-icon">◯</span>圓形
+    </button>
+    <button class="tab-btn" onclick="switchTab('ref', this)">
+        <span class="tab-icon">≡</span>材質表
+    </button>
+</nav>
+
+<!-- ═══ 矩形 ═══ -->
+<div id="panel-rect" class="tab-panel active">
+
+    <div class="steps">
+        <div class="step"><div class="step-num">01</div><div class="step-label">輸入尺寸</div></div>
+        <div class="step"><div class="step-num">02</div><div class="step-label">選擇材質</div></div>
+        <div class="step"><div class="step-num">03</div><div class="step-label">填入重量</div></div>
+        <div class="step"><div class="step-num">04</div><div class="step-label">得出厚度</div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">尺寸輸入</div>
+        <div class="form-row two-col">
+            <div class="field">
+                <label>長度 L (mm)</label>
+                <input type="number" id="r-length" inputmode="decimal" placeholder="160">
+            </div>
+            <div class="field">
+                <label>寬度 W (mm)</label>
+                <input type="number" id="r-width" inputmode="decimal" placeholder="83">
+            </div>
+        </div>
+        <div class="form-row single">
+            <div class="field">
+                <label>高度 H (mm) <span style="font-weight:400;color:#aaa;">（目前不計入面積）</span></label>
+                <input type="number" id="r-height" inputmode="decimal" placeholder="26（選填）">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">材質選擇</div>
+        <div class="material-pills" id="r-pills">
+            <div class="pill active" data-mat="PET" onclick="selectMat('r','PET',this)">PET</div>
+            <div class="pill" data-mat="PS" onclick="selectMat('r','PS',this)">PS</div>
+            <div class="pill" data-mat="PP" onclick="selectMat('r','PP',this)">PP</div>
+            <div class="pill" data-mat="PVC" onclick="selectMat('r','PVC',this)">PVC</div>
+            <div class="pill" data-mat="custom" onclick="selectMat('r','custom',this)">自定義</div>
+        </div>
+        <div class="form-row single custom-density-row" id="r-custom-row">
+            <div class="field">
+                <label>自定義比重</label>
+                <input type="number" id="r-custom-density" inputmode="decimal" step="0.01" placeholder="例: 1.20">
+            </div>
+        </div>
+        <input type="hidden" id="r-mat" value="PET">
+    </div>
+
+    <div class="card">
+        <div class="card-title">成品重量</div>
+        <div class="form-row single">
+            <div class="field">
+                <label>重量 (g)</label>
+                <input type="number" id="r-weight" inputmode="decimal" step="0.01" placeholder="例: 6.28">
+            </div>
+        </div>
+        <button class="calc-btn" onclick="calcRect()">計算原材料厚度</button>
+        <div class="result-box" id="r-result">
+            <div class="result-label">原材料厚度</div>
+            <div class="result-value" id="r-val">—<span>mm</span></div>
+            <div class="divider"></div>
+            <div class="formula-box">
+                <div class="formula-title">計算公式</div>
+                <div class="formula-line" id="r-formula-detail"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="background:var(--primary-light); border-color:var(--primary);">
+        <div class="formula-title" style="margin-bottom:8px;">公式說明</div>
+        <div class="formula-line">
+            <span class="hl">厚度</span> = 重量 ÷ (面積 × 比重 × 1000)
+        </div>
+        <div class="formula-line" style="margin-top:6px;color:var(--muted);">
+            面積 = L × W（m²）
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 圓形 ═══ -->
+<div id="panel-circle" class="tab-panel">
+
+    <div class="steps">
+        <div class="step"><div class="step-num">01</div><div class="step-label">輸入直徑</div></div>
+        <div class="step"><div class="step-num">02</div><div class="step-label">選擇材質</div></div>
+        <div class="step"><div class="step-num">03</div><div class="step-label">填入重量</div></div>
+        <div class="step"><div class="step-num">04</div><div class="step-label">得出厚度</div></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">尺寸輸入</div>
+        <div class="form-row single">
+            <div class="field">
+                <label>直徑 D (mm)</label>
+                <input type="number" id="c-diameter" inputmode="decimal" placeholder="98">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">材質選擇</div>
+        <div class="material-pills" id="c-pills">
+            <div class="pill" data-mat="PET" onclick="selectMat('c','PET',this)">PET</div>
+            <div class="pill active" data-mat="PS" onclick="selectMat('c','PS',this)">PS</div>
+            <div class="pill" data-mat="PP" onclick="selectMat('c','PP',this)">PP</div>
+            <div class="pill" data-mat="PVC" onclick="selectMat('c','PVC',this)">PVC</div>
+            <div class="pill" data-mat="custom" onclick="selectMat('c','custom',this)">自定義</div>
+        </div>
+        <div class="form-row single custom-density-row" id="c-custom-row">
+            <div class="field">
+                <label>自定義比重</label>
+                <input type="number" id="c-custom-density" inputmode="decimal" step="0.01" placeholder="例: 1.20">
+            </div>
+        </div>
+        <input type="hidden" id="c-mat" value="PS">
+    </div>
+
+    <div class="card">
+        <div class="card-title">成品重量</div>
+        <div class="form-row single">
+            <div class="field">
+                <label>重量 (g)</label>
+                <input type="number" id="c-weight" inputmode="decimal" step="0.01" placeholder="例: 3.5">
+            </div>
+        </div>
+        <button class="calc-btn" onclick="calcCircle()">計算原材料厚度</button>
+        <div class="result-box" id="c-result">
+            <div class="result-label">原材料厚度</div>
+            <div class="result-value" id="c-val">—<span>mm</span></div>
+            <div class="divider"></div>
+            <div class="formula-box">
+                <div class="formula-title">計算公式</div>
+                <div class="formula-line" id="c-formula-detail"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="background:var(--primary-light); border-color:var(--primary);">
+        <div class="formula-title" style="margin-bottom:8px;">公式說明</div>
+        <div class="formula-line">
+            <span class="hl">厚度</span> = 重量 ÷ (面積 × 比重 × 1000)
+        </div>
+        <div class="formula-line" style="margin-top:6px;color:var(--muted);">
+            面積 = π × (D/2)²（m²）
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 材質表 ═══ -->
+<div id="panel-ref" class="tab-panel">
+    <div class="card">
+        <div class="card-title">常用材質比重參考</div>
+        <table class="ref-table">
+            <thead>
+                <tr>
+                    <th>材質</th>
+                    <th>縮寫</th>
+                    <th>比重</th>
+                    <th>常見用途</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>聚對苯二甲酸乙二醇酯</td>
+                    <td><span class="mat-badge">PET</span></td>
+                    <td><span class="density-val">1.35</span></td>
+                    <td>飲料瓶、食品包裝</td>
+                </tr>
+                <tr>
+                    <td>聚苯乙烯</td>
+                    <td><span class="mat-badge" style="background:#00b8e6;">PS</span></td>
+                    <td><span class="density-val">1.05</span></td>
+                    <td>杯蓋、一次性餐具</td>
+                </tr>
+                <tr>
+                    <td>聚丙烯</td>
+                    <td><span class="mat-badge" style="background:#00c2a8;">PP</span></td>
+                    <td><span class="density-val">0.91</span></td>
+                    <td>食品容器、藥品包裝</td>
+                </tr>
+                <tr>
+                    <td>聚氯乙烯</td>
+                    <td><span class="mat-badge" style="background:#ff7043;">PVC</span></td>
+                    <td><span class="density-val">1.40</span></td>
+                    <td>醫療包裝、電子品包裝</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="card-title">計算公式總覽</div>
+        <div class="formula-box" style="border:none;padding:0;">
+            <div class="formula-title">通用公式</div>
+            <div class="formula-line"><span class="hl">T</span> = W ÷ (A × ρ × 1000)</div>
+            <div class="divider"></div>
+            <div class="formula-line"><span class="hl2">T</span> = 原材料厚度 (mm)</div>
+            <div class="formula-line"><span class="hl2">W</span> = 成品重量 (g)</div>
+            <div class="formula-line"><span class="hl2">A</span> = 產品投影面積 (m²)</div>
+            <div class="formula-line"><span class="hl2">ρ</span> = 材質比重 (g/cm³)</div>
+            <div class="divider"></div>
+            <div class="formula-title">矩形面積</div>
+            <div class="formula-line"><span class="hl2">A</span> = L × W ÷ 1,000,000</div>
+            <div class="divider"></div>
+            <div class="formula-title">圓形面積</div>
+            <div class="formula-line"><span class="hl2">A</span> = π × (D÷2)² ÷ 1,000,000</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const densities = { PET: 1.35, PS: 1.05, PP: 0.91, PVC: 1.40 };
+
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function selectMat(prefix, mat, el) {
+        document.querySelectorAll(`#${prefix}-pills .pill`).forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById(prefix + '-mat').value = mat;
+        const row = document.getElementById(prefix + '-custom-row');
+        if (mat === 'custom') row.classList.add('show');
+        else row.classList.remove('show');
+    }
+
+    function getDensity(prefix) {
+        const mat = document.getElementById(prefix + '-mat').value;
+        if (mat === 'custom') {
+            const v = parseFloat(document.getElementById(prefix + '-custom-density').value);
+            return isNaN(v) || v <= 0 ? null : v;
+        }
+        return densities[mat];
+    }
+
+    function calcRect() {
+        const L = parseFloat(document.getElementById('r-length').value);
+        const W = parseFloat(document.getElementById('r-width').value);
+        const weight = parseFloat(document.getElementById('r-weight').value);
+        const density = getDensity('r');
+        const mat = document.getElementById('r-mat').value;
+
+        if ([L, W, weight].some(v => isNaN(v) || v <= 0)) { shake('r-weight'); alert('請輸入有效的長度、寬度及重量'); return; }
+        if (!density) { alert('請輸入有效的材質比重'); return; }
+
+        const area = (L / 1000) * (W / 1000); // m²
+        const thickness = weight / (area * density * 1000);
+
+        document.getElementById('r-val').innerHTML = thickness.toFixed(4) + '<span>mm</span>';
+        document.getElementById('r-formula-detail').innerHTML =
+            `<span class="hl2">面積</span> = ${L} × ${W} ÷ 1,000,000 = <span class="hl">${area.toFixed(6)}</span> m²<br>` +
+            `<span class="hl2">材質</span> = ${mat === 'custom' ? '自定義' : mat}（ρ = ${density}）<br>` +
+            `<span class="hl2">厚度</span> = ${weight} ÷ (${area.toFixed(6)} × ${density} × 1000)<br>` +
+            `       = <span class="hl">${thickness.toFixed(4)} mm</span>`;
+
+        const box = document.getElementById('r-result');
+        box.classList.remove('show');
+        void box.offsetWidth;
+        box.classList.add('show');
+    }
+
+    function calcCircle() {
+        const D = parseFloat(document.getElementById('c-diameter').value);
+        const weight = parseFloat(document.getElementById('c-weight').value);
+        const density = getDensity('c');
+        const mat = document.getElementById('c-mat').value;
+
+        if ([D, weight].some(v => isNaN(v) || v <= 0)) { alert('請輸入有效的直徑及重量'); return; }
+        if (!density) { alert('請輸入有效的材質比重'); return; }
+
+        const r = D / 2 / 1000; // m
+        const area = Math.PI * r * r;
+        const thickness = weight / (area * density * 1000);
+
+        document.getElementById('c-val').innerHTML = thickness.toFixed(4) + '<span>mm</span>';
+        document.getElementById('c-formula-detail').innerHTML =
+            `<span class="hl2">面積</span> = π × (${D/2} mm)² ÷ 1,000,000 = <span class="hl">${area.toFixed(6)}</span> m²<br>` +
+            `<span class="hl2">材質</span> = ${mat === 'custom' ? '自定義' : mat}（ρ = ${density}）<br>` +
+            `<span class="hl2">厚度</span> = ${weight} ÷ (${area.toFixed(6)} × ${density} × 1000)<br>` +
+            `       = <span class="hl">${thickness.toFixed(4)} mm</span>`;
+
+        const box = document.getElementById('c-result');
+        box.classList.remove('show');
+        void box.offsetWidth;
+        box.classList.add('show');
+    }
+
+    function shake(id) {
+        const el = document.getElementById(id);
+        el.style.animation = 'none';
+        el.offsetWidth;
+        el.style.animation = 'shake 0.3s';
+    }
+</script>
+</body>
+</html>
