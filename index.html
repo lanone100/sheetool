@@ -2,684 +2,752 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>真空成型厚度計算器</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=yes">
+    <title>真空成型材料厚度計算器 · 多彩版</title>
     <style>
-        :root {
-            --primary: #0077cc;
-            --primary-light: #e6f3fb;
-            --accent: #00c2a8;
-            --bg: #f4f7fb;
-            --card: #ffffff;
-            --text: #1a2233;
-            --muted: #6b7a99;
-            --border: #dde3ef;
-            --result-bg: #eafaf7;
-            --result-border: #00c2a8;
-            --shadow: 0 2px 16px rgba(0,119,204,0.08);
-            --radius: 16px;
+        /* 蘋果風格基底 + 豐富背景 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* 豐富多彩背景：柔和漸層 + 彩色光暈 */
+            background: 
+                radial-gradient(circle at 0% 20%, rgba(255, 220, 240, 0.5) 0%, transparent 35%),
+                radial-gradient(circle at 90% 10%, rgba(200, 230, 255, 0.7) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(255, 240, 180, 0.6) 0%, transparent 45%),
+                radial-gradient(circle at 70% 60%, rgba(210, 240, 255, 0.8) 0%, transparent 50%),
+                linear-gradient(145deg, #fbe9f4 0%, #e3f0fd 50%, #f5f0e8 100%);
+            color: #1c1e24;
+            line-height: 1.4;
             min-height: 100vh;
-            padding-bottom: 32px;
+            padding-bottom: 30px;
+            letter-spacing: -0.01em;
         }
 
-        /* ── Header ── */
-        .app-header {
-            background: linear-gradient(135deg, #0077cc 0%, #00b8e6 60%, #00c2a8 100%);
-            color: white;
-            padding: 28px 20px 22px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        :root {
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-bg-solid: #ffffff;
+            --primary: #0066cc;
+            --primary-tint: #e1edff;
+            --accent: #34c759;
+            --accent-light: #e4f5e9;
+            --secondary: #ff9f0a;
+            --gray-light: #f2f2f7;
+            --gray-mid: #8e8e93;
+            --gray-dark: #3a3a44;
+            --border-light: rgba(60, 60, 67, 0.08);
+            --shadow-card: 0 8px 28px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(255, 255, 255, 0.7) inset;
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
         }
-        .app-header::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 20px,
-                rgba(255,255,255,0.04) 20px,
-                rgba(255,255,255,0.04) 40px
-            );
+
+        /* 毛玻璃標題 — 加上豐富色彩 */
+        .app-header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,245,250,0.8) 100%);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            padding: 26px 20px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(255,180,200,0.2);
         }
         .app-header h1 {
-            font-size: 1.4rem;
+            font-size: 1.9rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
-            position: relative;
+            background: linear-gradient(145deg, #0066cc, #9a4dff, #ff5e9a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
         }
         .app-header p {
             font-size: 0.8rem;
-            opacity: 0.85;
+            font-weight: 400;
+            color: #5c5c6e;
             margin-top: 4px;
-            position: relative;
-            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
         }
 
-        /* ── Tab Nav ── */
+        /* 導航分頁 — 半透明玻璃 */
         .tab-nav {
             display: flex;
-            background: var(--card);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 12px 16px;
+            gap: 8px;
+            background: transparent;
         }
         .tab-btn {
             flex: 1;
-            padding: 14px 8px;
-            border: none;
-            background: transparent;
-            font-family: 'Noto Sans TC', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--muted);
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 40px;
+            padding: 12px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c2c38;
+            text-align: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(255,200,230,0.3);
             cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-            letter-spacing: 0.02em;
         }
         .tab-btn.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
+            background: var(--primary);
+            border-color: white;
+            color: white;
+            box-shadow: 0 6px 16px rgba(0,102,204,0.5);
         }
         .tab-btn .tab-icon {
-            display: block;
             font-size: 1.2rem;
-            margin-bottom: 2px;
+            margin-right: 4px;
+            display: inline-block;
+            vertical-align: middle;
         }
 
-        /* ── Content ── */
-        .tab-panel { display: none; padding: 16px 14px; }
-        .tab-panel.active { display: block; }
+        /* 主要面板容器 */
+        .tab-panel {
+            display: none;
+            padding: 16px 16px 20px;
+        }
+        .tab-panel.active {
+            display: block;
+        }
 
-        /* ── Card ── */
+        /* 卡片 — 半透明白色玻璃，凸顯背景 */
         .card {
-            background: var(--card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 16px;
-            margin-bottom: 14px;
-            border: 1px solid var(--border);
-            overflow: hidden;   /* 防止子元素溢出圓角 */
+            background: var(--card-bg);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: var(--radius-xl);
+            padding: 22px 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(255,255,255,0.8) inset;
+            border: 0.5px solid rgba(255,255,255,0.9);
+            transition: transform 0.12s;
         }
         .card-title {
-            font-size: 0.95rem;
-            font-weight: 700;
+            font-size: 1rem;
+            font-weight: 600;
             color: var(--primary);
             margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            letter-spacing: -0.3px;
+            text-transform: uppercase;
         }
-        .card-title::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 16px;
-            background: linear-gradient(180deg, var(--primary), var(--accent));
-            border-radius: 2px;
+        .card-title span {
+            background: var(--primary-tint);
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-left: 10px;
         }
 
-        /* ── Form ── */
+        /* 表單欄位 */
+        .form-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
         .form-row {
-            display: grid;
-            grid-template-columns: 1fr;   /* 手機預設單欄 */
-            gap: 12px;
-            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
         }
-        /* 桌機/平板才用兩欄 */
-        @media (min-width: 480px) {
-            .form-row.two-col { grid-template-columns: 1fr 1fr; }
+        .form-row.two-cols > * {
+            flex: 1 1 calc(50% - 7px);
+            min-width: 130px;
         }
-        .form-row.single { grid-template-columns: 1fr; }
-
-        .field { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
         .field label {
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            color: var(--muted);
-            letter-spacing: 0.02em;
+            color: #4f4f5e;
+            letter-spacing: -0.2px;
+            margin-left: 6px;
         }
         .field input, .field select {
-            font-family: 'DM Mono', monospace;
-            font-size: 1.05rem;
-            padding: 14px 16px;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            background: var(--bg);
-            color: var(--text);
-            width: 100%;
-            min-width: 0;           /* 防止 grid 子元素溢出 */
-            transition: border-color 0.2s, box-shadow 0.2s;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            font-size: 1.1rem;
+            font-family: -apple-system, 'SF Mono', monospace;
+            font-weight: 500;
+            color: #1c1e24;
+            outline: none;
+            transition: background 0.2s, border 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(4px);
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
             -webkit-appearance: none;
             appearance: none;
         }
         .field input:focus, .field select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0,119,204,0.12);
             background: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,102,204,0.2);
+        }
+        .field input::placeholder {
+            color: #a8a9b4;
+            font-weight: 400;
         }
         .field select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12' viewBox='0 0 16 12' fill='none'%3E%3Cpath d='M2 4L8 10L14 4' stroke='%236f6f7a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 36px;
+            background-position: right 18px center;
+            padding-right: 42px;
         }
 
-        /* ── Material Pills ── */
+        /* 材質膠囊 */
         .material-pills {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
-            margin-bottom: 12px;
+            margin: 10px 0 14px;
         }
         .pill {
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1.5px solid var(--border);
-            background: white;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--muted);
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 40px;
+            padding: 12px 22px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #3a3a44;
+            border: 1px solid rgba(255,255,255,0.8);
+            transition: all 0.2s;
             cursor: pointer;
-            transition: all 0.15s;
-            font-family: 'DM Mono', monospace;
+            box-shadow: 0 4px 10px rgba(255,200,220,0.3);
+            text-align: center;
+            flex: 0 0 auto;
         }
         .pill.active {
             background: var(--primary);
-            border-color: var(--primary);
             color: white;
+            border-color: white;
+            box-shadow: 0 8px 18px rgba(0,102,204,0.4);
         }
-        .pill:hover:not(.active) {
-            border-color: var(--primary);
-            color: var(--primary);
+        .pill[data-mat="custom"].active {
+            background: var(--secondary);
+            border-color: white;
         }
 
-        /* ── Calc Button ── */
+        /* 自定義比重行 */
+        .custom-density-row {
+            display: none;
+            margin-top: 8px;
+        }
+        .custom-density-row.show {
+            display: block;
+        }
+
+        /* 計算按鈕 */
         .calc-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--primary), #00b8e6);
-            color: white;
+            background: linear-gradient(145deg, #0066cc, #5b5bd6, #9a4dff);
             border: none;
-            border-radius: 12px;
-            font-family: 'Noto Sans TC', sans-serif;
-            font-size: 1rem;
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            width: 100%;
+            font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
+            color: white;
+            text-align: center;
+            margin: 8px 0 4px;
+            box-shadow: 0 12px 30px -8px rgba(154, 77, 255, 0.5);
+            transition: all 0.15s ease;
             cursor: pointer;
-            margin-top: 4px;
-            transition: transform 0.1s, box-shadow 0.2s;
-            box-shadow: 0 4px 12px rgba(0,119,204,0.3);
+            letter-spacing: 0.5px;
+            border: 0.5px solid rgba(255,255,255,0.5);
         }
-        .calc-btn:active { transform: scale(0.98); }
-        .calc-btn:hover { box-shadow: 0 6px 18px rgba(0,119,204,0.4); }
+        .calc-btn:active {
+            transform: scale(0.985);
+            box-shadow: 0 6px 18px -4px #9a4dff;
+        }
 
-        /* ── Result ── */
+        /* 結果卡片 */
         .result-box {
             display: none;
-            margin-top: 16px;
-            background: var(--result-bg);
-            border: 1.5px solid var(--result-border);
-            border-radius: 12px;
-            padding: 16px;
-            animation: slideIn 0.25s ease;
+            background: rgba(228, 245, 233, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-lg);
+            padding: 20px 18px;
+            margin-top: 20px;
+            border-left: 6px solid var(--accent);
+            box-shadow: 0 8px 24px rgba(52,199,89,0.25);
         }
-        .result-box.show { display: block; }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
+        .result-box.show {
+            display: block;
+            animation: fadeSlide 0.3s ease;
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .result-label {
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            color: var(--accent);
-            letter-spacing: 0.08em;
             text-transform: uppercase;
-            margin-bottom: 4px;
+            color: var(--accent);
+            letter-spacing: 0.5px;
         }
         .result-value {
-            font-family: 'DM Mono', monospace;
-            font-size: 2.2rem;
-            font-weight: 500;
-            color: var(--text);
-            line-height: 1;
+            font-size: 3rem;
+            font-weight: 700;
+            font-family: -apple-system, 'SF Mono', monospace;
+            color: #1c1e24;
+            line-height: 1.1;
+            margin: 4px 0 14px;
         }
         .result-value span {
-            font-size: 1rem;
-            color: var(--muted);
-            margin-left: 4px;
+            font-size: 1.2rem;
+            color: #5c5c6e;
+            font-weight: 500;
+            margin-left: 6px;
         }
-        .formula-box {
-            margin-top: 14px;
-            background: white;
-            border-radius: 8px;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
+        .formula-detail {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(4px);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.8);
+            word-break: break-word;
         }
-        .formula-title {
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--muted);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-        .formula-line {
-            font-family: 'DM Mono', monospace;
-            font-size: 0.78rem;
-            color: #444;
-            line-height: 1.7;
-        }
-        .formula-line .hl { color: var(--primary); font-weight: 500; }
-        .formula-line .hl2 { color: var(--accent); font-weight: 500; }
+        .formula-detail .hl { color: var(--primary); font-weight: 600; }
+        .formula-detail .hl2 { color: var(--accent); font-weight: 600; }
 
-        /* ── Reference Table ── */
+        /* 材質表格 */
         .ref-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.82rem;
-            table-layout: fixed;   /* 固定欄寬防溢出 */
+            font-size: 0.9rem;
         }
         .ref-table th {
-            background: var(--primary-light);
-            color: var(--primary);
-            font-weight: 700;
-            padding: 10px 8px;
             text-align: left;
+            color: #5c5c6e;
+            font-weight: 600;
             font-size: 0.75rem;
-            letter-spacing: 0.02em;
-            word-break: keep-all;
+            text-transform: uppercase;
+            padding: 14px 6px 8px;
         }
         .ref-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text);
-            word-break: break-all;
-            line-height: 1.5;
+            padding: 14px 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+            font-weight: 450;
         }
         .ref-table tr:last-child td { border-bottom: none; }
-        .ref-table tr:hover td { background: var(--primary-light); }
         .mat-badge {
+            background: var(--primary-tint);
+            color: var(--primary);
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
             display: inline-block;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-family: 'DM Mono', monospace;
-            font-size: 0.78rem;
-            font-weight: 500;
-            background: var(--primary);
-            color: white;
         }
         .density-val {
-            font-family: 'DM Mono', monospace;
-            font-weight: 500;
-            color: var(--accent);
+            font-weight: 600;
+            color: #1c1e24;
         }
 
-        /* ── Steps hint ── */
+        /* 步驟卡 */
         .steps {
             display: flex;
-            gap: 6px;
-            margin-bottom: 16px;
+            gap: 8px;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            padding: 8px 12px;
+            margin-bottom: 20px;
+            border: 0.5px solid rgba(255,255,255,0.8);
         }
         .step {
-            flex: 1;
-            background: var(--primary-light);
-            border-radius: 8px;
-            padding: 8px;
             text-align: center;
+            flex: 1;
         }
         .step-num {
             font-size: 1rem;
             font-weight: 700;
             color: var(--primary);
-            font-family: 'DM Mono', monospace;
+            background: rgba(255,255,255,0.8);
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            border-radius: 32px;
+            margin: 0 auto 4px;
+            box-shadow: 0 2px 10px rgba(255,200,230,0.5);
         }
         .step-label {
-            font-size: 0.68rem;
-            color: var(--muted);
-            margin-top: 2px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: #4f4f5e;
+            text-transform: uppercase;
         }
 
         .divider {
             height: 1px;
-            background: var(--border);
-            margin: 16px 0;
+            background: rgba(255,255,255,0.5);
+            margin: 18px 0;
         }
-
-        /* custom density hidden */
-        .custom-density-row { display: none; grid-template-columns: 1fr; }
-        .custom-density-row.show { display: grid; }
+        .memory-hint {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            color: #5c5c6e;
+            font-size: 0.7rem;
+        }
+        .memory-hint span {
+            background: rgba(255,255,255,0.7);
+            padding: 4px 10px;
+            border-radius: 40px;
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
 
 <div class="app-header">
-    <h1>真空成型厚度計算器</h1>
-    <p>VACUUM FORMING MATERIAL CALCULATOR</p>
+    <h1>真空成型材料厚度計算器</h1>
+    <p>MATERIAL THICKNESS · 繽紛版</p>
 </div>
 
+<!-- 分頁導航 -->
 <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('rect', this)">
-        <span class="tab-icon">▬</span>矩形
-    </button>
-    <button class="tab-btn" onclick="switchTab('circle', this)">
-        <span class="tab-icon">◯</span>圓形
-    </button>
-    <button class="tab-btn" onclick="switchTab('ref', this)">
-        <span class="tab-icon">≡</span>材質表
-    </button>
+    <button class="tab-btn active" onclick="switchTab('rect', this)"><span class="tab-icon">▬</span> 矩形</button>
+    <button class="tab-btn" onclick="switchTab('circle', this)"><span class="tab-icon">◯</span> 圓形</button>
+    <button class="tab-btn" onclick="switchTab('ref', this)"><span class="tab-icon">≡</span> 材質表</button>
 </nav>
 
-<!-- ═══ 矩形 ═══ -->
+<!-- 矩形面板 -->
 <div id="panel-rect" class="tab-panel active">
-
     <div class="steps">
-        <div class="step"><div class="step-num">01</div><div class="step-label">輸入尺寸</div></div>
-        <div class="step"><div class="step-num">02</div><div class="step-label">選擇材質</div></div>
-        <div class="step"><div class="step-num">03</div><div class="step-label">填入重量</div></div>
-        <div class="step"><div class="step-num">04</div><div class="step-label">得出厚度</div></div>
+        <div class="step"><div class="step-num">1</div><div class="step-label">尺寸</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-label">材質</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-label">重量</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-label">厚度</div></div>
     </div>
 
     <div class="card">
-        <div class="card-title">尺寸輸入</div>
-        <div class="form-row two-col">
-            <div class="field">
-                <label>長度 L (mm)</label>
-                <input type="number" id="r-length" inputmode="decimal" placeholder="160">
+        <div class="card-title">📐 矩形尺寸 <span>mm</span></div>
+        <div class="form-grid">
+            <div class="form-row two-cols">
+                <div class="field">
+                    <label>長度 L (mm)</label>
+                    <input type="number" id="r-length" placeholder="160" step="any">
+                </div>
+                <div class="field">
+                    <label>寬度 W (mm)</label>
+                    <input type="number" id="r-width" placeholder="83" step="any">
+                </div>
             </div>
             <div class="field">
-                <label>寬度 W (mm)</label>
-                <input type="number" id="r-width" inputmode="decimal" placeholder="83">
-            </div>
-        </div>
-        <div class="form-row single">
-            <div class="field">
-                <label>高度 H (mm) <span style="font-weight:400;color:#aaa;">（目前不計入面積）</span></label>
-                <input type="number" id="r-height" inputmode="decimal" placeholder="26（選填）">
+                <label>高度 H (mm) <span style="color:#7a7a8a; font-weight:400;">(選填，不影響面積)</span></label>
+                <input type="number" id="r-height" placeholder="26 (選填)" step="any">
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="card-title">材質選擇</div>
+        <div class="card-title">⚙️ 材質選擇</div>
         <div class="material-pills" id="r-pills">
             <div class="pill active" data-mat="PET" onclick="selectMat('r','PET',this)">PET</div>
             <div class="pill" data-mat="PS" onclick="selectMat('r','PS',this)">PS</div>
             <div class="pill" data-mat="PP" onclick="selectMat('r','PP',this)">PP</div>
             <div class="pill" data-mat="PVC" onclick="selectMat('r','PVC',this)">PVC</div>
-            <div class="pill" data-mat="custom" onclick="selectMat('r','custom',this)">自定義</div>
+            <div class="pill" data-mat="custom" onclick="selectMat('r','custom',this)">自訂</div>
         </div>
-        <div class="form-row single custom-density-row" id="r-custom-row">
+        <div class="custom-density-row" id="r-custom-row">
             <div class="field">
-                <label>自定義比重</label>
-                <input type="number" id="r-custom-density" inputmode="decimal" step="0.01" placeholder="例: 1.20">
+                <label>自訂比重 (g/cm³)</label>
+                <input type="number" id="r-custom-density" placeholder="1.20" step="0.01">
             </div>
         </div>
         <input type="hidden" id="r-mat" value="PET">
     </div>
 
     <div class="card">
-        <div class="card-title">成品重量</div>
-        <div class="form-row single">
-            <div class="field">
-                <label>重量 (g)</label>
-                <input type="number" id="r-weight" inputmode="decimal" step="0.01" placeholder="例: 6.28">
-            </div>
+        <div class="card-title">⚖️ 成品重量</div>
+        <div class="field">
+            <label>重量 (g)</label>
+            <input type="number" id="r-weight" placeholder="6.28" step="any">
         </div>
-        <button class="calc-btn" onclick="calcRect()">計算原材料厚度</button>
+        <button class="calc-btn" onclick="calcRect()">計算厚度</button>
         <div class="result-box" id="r-result">
             <div class="result-label">原材料厚度</div>
             <div class="result-value" id="r-val">—<span>mm</span></div>
-            <div class="divider"></div>
-            <div class="formula-box">
-                <div class="formula-title">計算公式</div>
-                <div class="formula-line" id="r-formula-detail"></div>
-            </div>
+            <div class="formula-detail" id="r-formula-detail"></div>
         </div>
-    </div>
-
-    <div class="card" style="background:var(--primary-light); border-color:var(--primary);">
-        <div class="formula-title" style="margin-bottom:8px;">公式說明</div>
-        <div class="formula-line">
-            <span class="hl">厚度</span> = 重量 ÷ (面積 × 比重 × 1000)
-        </div>
-        <div class="formula-line" style="margin-top:6px;color:var(--muted);">
-            面積 = L × W（m²）
-        </div>
+        <div class="memory-hint"><span>⏺ 自動記憶</span> 上次輸入</div>
     </div>
 </div>
 
-<!-- ═══ 圓形 ═══ -->
+<!-- 圓形面板 -->
 <div id="panel-circle" class="tab-panel">
-
     <div class="steps">
-        <div class="step"><div class="step-num">01</div><div class="step-label">輸入直徑</div></div>
-        <div class="step"><div class="step-num">02</div><div class="step-label">選擇材質</div></div>
-        <div class="step"><div class="step-num">03</div><div class="step-label">填入重量</div></div>
-        <div class="step"><div class="step-num">04</div><div class="step-label">得出厚度</div></div>
+        <div class="step"><div class="step-num">1</div><div class="step-label">直徑</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-label">材質</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-label">重量</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-label">厚度</div></div>
     </div>
 
     <div class="card">
-        <div class="card-title">尺寸輸入</div>
-        <div class="form-row single">
-            <div class="field">
-                <label>直徑 D (mm)</label>
-                <input type="number" id="c-diameter" inputmode="decimal" placeholder="98">
-            </div>
+        <div class="card-title">⚪ 圓形直徑</div>
+        <div class="field">
+            <label>直徑 D (mm)</label>
+            <input type="number" id="c-diameter" placeholder="98" step="any">
         </div>
     </div>
 
     <div class="card">
-        <div class="card-title">材質選擇</div>
+        <div class="card-title">⚙️ 材質選擇</div>
         <div class="material-pills" id="c-pills">
             <div class="pill" data-mat="PET" onclick="selectMat('c','PET',this)">PET</div>
             <div class="pill active" data-mat="PS" onclick="selectMat('c','PS',this)">PS</div>
             <div class="pill" data-mat="PP" onclick="selectMat('c','PP',this)">PP</div>
             <div class="pill" data-mat="PVC" onclick="selectMat('c','PVC',this)">PVC</div>
-            <div class="pill" data-mat="custom" onclick="selectMat('c','custom',this)">自定義</div>
+            <div class="pill" data-mat="custom" onclick="selectMat('c','custom',this)">自訂</div>
         </div>
-        <div class="form-row single custom-density-row" id="c-custom-row">
+        <div class="custom-density-row" id="c-custom-row">
             <div class="field">
-                <label>自定義比重</label>
-                <input type="number" id="c-custom-density" inputmode="decimal" step="0.01" placeholder="例: 1.20">
+                <label>自訂比重 (g/cm³)</label>
+                <input type="number" id="c-custom-density" placeholder="1.20" step="0.01">
             </div>
         </div>
         <input type="hidden" id="c-mat" value="PS">
     </div>
 
     <div class="card">
-        <div class="card-title">成品重量</div>
-        <div class="form-row single">
-            <div class="field">
-                <label>重量 (g)</label>
-                <input type="number" id="c-weight" inputmode="decimal" step="0.01" placeholder="例: 3.5">
-            </div>
+        <div class="card-title">⚖️ 成品重量</div>
+        <div class="field">
+            <label>重量 (g)</label>
+            <input type="number" id="c-weight" placeholder="3.5" step="any">
         </div>
-        <button class="calc-btn" onclick="calcCircle()">計算原材料厚度</button>
+        <button class="calc-btn" onclick="calcCircle()">計算厚度</button>
         <div class="result-box" id="c-result">
             <div class="result-label">原材料厚度</div>
             <div class="result-value" id="c-val">—<span>mm</span></div>
-            <div class="divider"></div>
-            <div class="formula-box">
-                <div class="formula-title">計算公式</div>
-                <div class="formula-line" id="c-formula-detail"></div>
-            </div>
+            <div class="formula-detail" id="c-formula-detail"></div>
         </div>
-    </div>
-
-    <div class="card" style="background:var(--primary-light); border-color:var(--primary);">
-        <div class="formula-title" style="margin-bottom:8px;">公式說明</div>
-        <div class="formula-line">
-            <span class="hl">厚度</span> = 重量 ÷ (面積 × 比重 × 1000)
-        </div>
-        <div class="formula-line" style="margin-top:6px;color:var(--muted);">
-            面積 = π × (D/2)²（m²）
-        </div>
+        <div class="memory-hint"><span>⏺ 自動記憶</span> 上次輸入</div>
     </div>
 </div>
 
-<!-- ═══ 材質表 ═══ -->
+<!-- 材質參考面板 -->
 <div id="panel-ref" class="tab-panel">
     <div class="card">
-        <div class="card-title">常用材質比重參考</div>
+        <div class="card-title">📋 常用材質比重表</div>
         <table class="ref-table">
-            <thead>
-                <tr>
-                    <th>材質</th>
-                    <th>縮寫</th>
-                    <th>比重</th>
-                    <th>常見用途</th>
-                </tr>
-            </thead>
+            <thead><tr><th>材質</th><th>縮寫</th><th>比重</th><th>用途</th></tr></thead>
             <tbody>
-                <tr>
-                    <td>聚對苯二甲酸乙二醇酯</td>
-                    <td><span class="mat-badge">PET</span></td>
-                    <td><span class="density-val">1.35</span></td>
-                    <td>飲料瓶、食品包裝</td>
-                </tr>
-                <tr>
-                    <td>聚苯乙烯</td>
-                    <td><span class="mat-badge" style="background:#00b8e6;">PS</span></td>
-                    <td><span class="density-val">1.05</span></td>
-                    <td>杯蓋、一次性餐具</td>
-                </tr>
-                <tr>
-                    <td>聚丙烯</td>
-                    <td><span class="mat-badge" style="background:#00c2a8;">PP</span></td>
-                    <td><span class="density-val">0.91</span></td>
-                    <td>食品容器、藥品包裝</td>
-                </tr>
-                <tr>
-                    <td>聚氯乙烯</td>
-                    <td><span class="mat-badge" style="background:#ff7043;">PVC</span></td>
-                    <td><span class="density-val">1.40</span></td>
-                    <td>醫療包裝、電子品包裝</td>
-                </tr>
+                <tr><td>PET</td><td><span class="mat-badge">PET</span></td><td class="density-val">1.35</td><td>飲料瓶、包裝</td></tr>
+                <tr><td>PS</td><td><span class="mat-badge" style="background:#e1edff;">PS</span></td><td class="density-val">1.05</td><td>杯蓋、餐具</td></tr>
+                <tr><td>PP</td><td><span class="mat-badge" style="background:#e4f5e9;">PP</span></td><td class="density-val">0.91</td><td>食品容器</td></tr>
+                <tr><td>PVC</td><td><span class="mat-badge" style="background:#ffe4d6;">PVC</span></td><td class="density-val">1.40</td><td>醫療包裝</td></tr>
             </tbody>
         </table>
-    </div>
-
-    <div class="card">
-        <div class="card-title">計算公式總覽</div>
-        <div class="formula-box" style="border:none;padding:0;">
-            <div class="formula-title">通用公式</div>
-            <div class="formula-line"><span class="hl">T</span> = W ÷ (A × ρ × 1000)</div>
-            <div class="divider"></div>
-            <div class="formula-line"><span class="hl2">T</span> = 原材料厚度 (mm)</div>
-            <div class="formula-line"><span class="hl2">W</span> = 成品重量 (g)</div>
-            <div class="formula-line"><span class="hl2">A</span> = 產品投影面積 (m²)</div>
-            <div class="formula-line"><span class="hl2">ρ</span> = 材質比重 (g/cm³)</div>
-            <div class="divider"></div>
-            <div class="formula-title">矩形面積</div>
-            <div class="formula-line"><span class="hl2">A</span> = L × W ÷ 1,000,000</div>
-            <div class="divider"></div>
-            <div class="formula-title">圓形面積</div>
-            <div class="formula-line"><span class="hl2">A</span> = π × (D÷2)² ÷ 1,000,000</div>
+        <div class="divider"></div>
+        <div class="formula-detail" style="background: rgba(255,255,255,0.7);">
+            <span class="hl">厚度 (mm)</span> = 重量(g) ÷ [ 面積(m²) × 比重 × 1000 ]<br>
+            <span class="hl2">矩形面積</span> = L × W / 1e6<br>
+            <span class="hl2">圓形面積</span> = π × (D/2)² / 1e6
         </div>
     </div>
 </div>
 
 <script>
-    const densities = { PET: 1.35, PS: 1.05, PP: 0.91, PVC: 1.40 };
+    (function() {
+        const densities = { PET: 1.35, PS: 1.05, PP: 0.91, PVC: 1.40 };
+        const STORAGE_KEY = 'vf_';
 
-    function switchTab(name, btn) {
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('panel-' + name).classList.add('active');
-        btn.classList.add('active');
-    }
+        // 切換分頁
+        window.switchTab = function(name, btn) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            btn.classList.add('active');
+        };
 
-    function selectMat(prefix, mat, el) {
-        document.querySelectorAll(`#${prefix}-pills .pill`).forEach(p => p.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById(prefix + '-mat').value = mat;
-        const row = document.getElementById(prefix + '-custom-row');
-        if (mat === 'custom') row.classList.add('show');
-        else row.classList.remove('show');
-    }
+        // 選擇材質
+        window.selectMat = function(prefix, mat, el) {
+            document.querySelectorAll(`#${prefix}-pills .pill`).forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById(prefix + '-mat').value = mat;
+            const row = document.getElementById(prefix + '-custom-row');
+            if (mat === 'custom') row.classList.add('show');
+            else row.classList.remove('show');
+            saveState(prefix);
+        };
 
-    function getDensity(prefix) {
-        const mat = document.getElementById(prefix + '-mat').value;
-        if (mat === 'custom') {
-            const v = parseFloat(document.getElementById(prefix + '-custom-density').value);
-            return isNaN(v) || v <= 0 ? null : v;
+        function getDensity(prefix) {
+            const mat = document.getElementById(prefix + '-mat').value;
+            if (mat === 'custom') {
+                const v = parseFloat(document.getElementById(prefix + '-custom-density').value);
+                return (isNaN(v) || v <= 0) ? null : v;
+            }
+            return densities[mat];
         }
-        return densities[mat];
-    }
 
-    function calcRect() {
-        const L = parseFloat(document.getElementById('r-length').value);
-        const W = parseFloat(document.getElementById('r-width').value);
-        const weight = parseFloat(document.getElementById('r-weight').value);
-        const density = getDensity('r');
-        const mat = document.getElementById('r-mat').value;
+        // 儲存狀態
+        function saveState(prefix) {
+            try {
+                if (prefix === 'r') {
+                    const data = {
+                        length: document.getElementById('r-length').value,
+                        width: document.getElementById('r-width').value,
+                        height: document.getElementById('r-height').value,
+                        weight: document.getElementById('r-weight').value,
+                        mat: document.getElementById('r-mat').value,
+                        customDens: document.getElementById('r-custom-density').value
+                    };
+                    localStorage.setItem(STORAGE_KEY + 'rect', JSON.stringify(data));
+                } else if (prefix === 'c') {
+                    const data = {
+                        diam: document.getElementById('c-diameter').value,
+                        weight: document.getElementById('c-weight').value,
+                        mat: document.getElementById('c-mat').value,
+                        customDens: document.getElementById('c-custom-density').value
+                    };
+                    localStorage.setItem(STORAGE_KEY + 'circle', JSON.stringify(data));
+                }
+            } catch (e) {}
+        }
+        window.saveState = saveState;
 
-        if ([L, W, weight].some(v => isNaN(v) || v <= 0)) { shake('r-weight'); alert('請輸入有效的長度、寬度及重量'); return; }
-        if (!density) { alert('請輸入有效的材質比重'); return; }
+        // 載入狀態
+        function loadState(prefix) {
+            try {
+                if (prefix === 'r') {
+                    const saved = localStorage.getItem(STORAGE_KEY + 'rect');
+                    if (saved) {
+                        const d = JSON.parse(saved);
+                        if (d.length) document.getElementById('r-length').value = d.length;
+                        if (d.width) document.getElementById('r-width').value = d.width;
+                        if (d.height) document.getElementById('r-height').value = d.height;
+                        if (d.weight) document.getElementById('r-weight').value = d.weight;
+                        if (d.mat) {
+                            document.getElementById('r-mat').value = d.mat;
+                            const pills = document.querySelectorAll('#r-pills .pill');
+                            pills.forEach(p => {
+                                if (p.getAttribute('data-mat') === d.mat) p.classList.add('active');
+                                else p.classList.remove('active');
+                            });
+                            const row = document.getElementById('r-custom-row');
+                            if (d.mat === 'custom') row.classList.add('show'); else row.classList.remove('show');
+                        }
+                        if (d.customDens) document.getElementById('r-custom-density').value = d.customDens;
+                    }
+                } else if (prefix === 'c') {
+                    const saved = localStorage.getItem(STORAGE_KEY + 'circle');
+                    if (saved) {
+                        const d = JSON.parse(saved);
+                        if (d.diam) document.getElementById('c-diameter').value = d.diam;
+                        if (d.weight) document.getElementById('c-weight').value = d.weight;
+                        if (d.mat) {
+                            document.getElementById('c-mat').value = d.mat;
+                            const pills = document.querySelectorAll('#c-pills .pill');
+                            pills.forEach(p => {
+                                if (p.getAttribute('data-mat') === d.mat) p.classList.add('active');
+                                else p.classList.remove('active');
+                            });
+                            const row = document.getElementById('c-custom-row');
+                            if (d.mat === 'custom') row.classList.add('show'); else row.classList.remove('show');
+                        }
+                        if (d.customDens) document.getElementById('c-custom-density').value = d.customDens;
+                    }
+                }
+            } catch (e) {}
+        }
 
-        const area = (L / 1000) * (W / 1000); // m²
-        const thickness = weight / (area * density * 1000);
+        // 矩形計算
+        window.calcRect = function() {
+            const L = parseFloat(document.getElementById('r-length').value);
+            const W = parseFloat(document.getElementById('r-width').value);
+            const weight = parseFloat(document.getElementById('r-weight').value);
+            const density = getDensity('r');
+            const mat = document.getElementById('r-mat').value;
 
-        document.getElementById('r-val').innerHTML = thickness.toFixed(4) + '<span>mm</span>';
-        document.getElementById('r-formula-detail').innerHTML =
-            `<span class="hl2">面積</span> = ${L} × ${W} ÷ 1,000,000 = <span class="hl">${area.toFixed(6)}</span> m²<br>` +
-            `<span class="hl2">材質</span> = ${mat === 'custom' ? '自定義' : mat}（ρ = ${density}）<br>` +
-            `<span class="hl2">厚度</span> = ${weight} ÷ (${area.toFixed(6)} × ${density} × 1000)<br>` +
-            `       = <span class="hl">${thickness.toFixed(4)} mm</span>`;
+            if ([L, W, weight].some(v => isNaN(v) || v <= 0)) {
+                alert('請填寫有效的長度、寬度及重量 (正數)');
+                return;
+            }
+            if (!density) { alert('請輸入有效的材質比重'); return; }
 
-        const box = document.getElementById('r-result');
-        box.classList.remove('show');
-        void box.offsetWidth;
-        box.classList.add('show');
-    }
+            const area = (L / 1000) * (W / 1000);
+            const thickness = weight / (area * density * 1000);
 
-    function calcCircle() {
-        const D = parseFloat(document.getElementById('c-diameter').value);
-        const weight = parseFloat(document.getElementById('c-weight').value);
-        const density = getDensity('c');
-        const mat = document.getElementById('c-mat').value;
+            document.getElementById('r-val').innerHTML = thickness.toFixed(4) + '<span>mm</span>';
+            document.getElementById('r-formula-detail').innerHTML =
+                `<span class="hl2">面積</span> = ${L}×${W} /1e6 = <span class="hl">${area.toFixed(6)}</span> m²<br>` +
+                `<span class="hl2">比重</span> = ${density} g/cm³<br>` +
+                `<span class="hl2">厚度</span> = ${weight} ÷ (${area.toFixed(6)} × ${density} × 1000)<br>` +
+                `= <span class="hl">${thickness.toFixed(4)} mm</span>`;
 
-        if ([D, weight].some(v => isNaN(v) || v <= 0)) { alert('請輸入有效的直徑及重量'); return; }
-        if (!density) { alert('請輸入有效的材質比重'); return; }
+            const box = document.getElementById('r-result');
+            box.classList.remove('show');
+            void box.offsetWidth;
+            box.classList.add('show');
+            saveState('r');
+        };
 
-        const r = D / 2 / 1000; // m
-        const area = Math.PI * r * r;
-        const thickness = weight / (area * density * 1000);
+        // 圓形計算
+        window.calcCircle = function() {
+            const D = parseFloat(document.getElementById('c-diameter').value);
+            const weight = parseFloat(document.getElementById('c-weight').value);
+            const density = getDensity('c');
+            const mat = document.getElementById('c-mat').value;
 
-        document.getElementById('c-val').innerHTML = thickness.toFixed(4) + '<span>mm</span>';
-        document.getElementById('c-formula-detail').innerHTML =
-            `<span class="hl2">面積</span> = π × (${D/2} mm)² ÷ 1,000,000 = <span class="hl">${area.toFixed(6)}</span> m²<br>` +
-            `<span class="hl2">材質</span> = ${mat === 'custom' ? '自定義' : mat}（ρ = ${density}）<br>` +
-            `<span class="hl2">厚度</span> = ${weight} ÷ (${area.toFixed(6)} × ${density} × 1000)<br>` +
-            `       = <span class="hl">${thickness.toFixed(4)} mm</span>`;
+            if ([D, weight].some(v => isNaN(v) || v <= 0)) { alert('請填寫有效的直徑及重量'); return; }
+            if (!density) { alert('請輸入有效的材質比重'); return; }
 
-        const box = document.getElementById('c-result');
-        box.classList.remove('show');
-        void box.offsetWidth;
-        box.classList.add('show');
-    }
+            const r = D / 2 / 1000;
+            const area = Math.PI * r * r;
+            const thickness = weight / (area * density * 1000);
 
-    function shake(id) {
-        const el = document.getElementById(id);
-        el.style.animation = 'none';
-        el.offsetWidth;
-        el.style.animation = 'shake 0.3s';
-    }
+            document.getElementById('c-val').innerHTML = thickness.toFixed(4) + '<span>mm</span>';
+            document.getElementById('c-formula-detail').innerHTML =
+                `<span class="hl2">面積</span> = π × (${D/2} mm)² /1e6 = <span class="hl">${area.toFixed(6)}</span> m²<br>` +
+                `<span class="hl2">比重</span> = ${density} g/cm³<br>` +
+                `<span class="hl2">厚度</span> = ${weight} ÷ (${area.toFixed(6)} × ${density} × 1000)<br>` +
+                `= <span class="hl">${thickness.toFixed(4)} mm</span>`;
+
+            const box = document.getElementById('c-result');
+            box.classList.remove('show');
+            void box.offsetWidth;
+            box.classList.add('show');
+            saveState('c');
+        };
+
+        // 載入記憶
+        loadState('r');
+        loadState('c');
+
+        // 輸入失焦時儲存
+        ['r-length','r-width','r-height','r-weight','c-diameter','c-weight','r-custom-density','c-custom-density'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('blur', function() {
+                if (id.startsWith('r')) saveState('r');
+                else if (id.startsWith('c')) saveState('c');
+            });
+        });
+    })();
 </script>
 </body>
 </html>
